@@ -172,3 +172,203 @@ Department
 National ID
 
 Monthly salary
+
+
+# Mediroza General Hospital Penetration Test - Report
+
+> **Security Assessment Report**  
+> **Assessment Type:** Black-Box Penetration Test  
+> **Target:** Mediroza General Hospital  
+> **Program:** NetworkWalks Cybersecurity Internship  
+> **Batch:** B083  
+> **Author:** Vraj Patel
+
+
+
+# 1. Executive Summary
+
+This report documents a black-box penetration test conducted against the **Mediroza General Hospital** application as part of the **NetworkWalks Cybersecurity Internship**.
+
+The assessment identified multiple vulnerabilities affecting authentication, patient-document protection, information disclosure, and backup management.
+
+The most severe issue identified was a **SQL injection vulnerability in the patient portal login functionality**. The vulnerability allowed authentication to be bypassed without valid credentials. Before exploitation, the login page also allowed **username enumeration**, providing useful information that could assist an attacker during credential and authentication attacks.
+
+After bypassing authentication, encrypted patient PDF reports were accessible through the patient-report functionality. The PDF passwords were subsequently subjected to controlled offline password-cracking analysis. The passwords were successfully recovered using wordlist-based techniques, demonstrating insufficient password strength.
+
+Further analysis identified sensitive metadata within patient PDF files. The assessment also discovered a forgotten `old/` directory with directory listing enabled. This directory exposed a database backup that was accessible through the web server.
+
+The exposed database backup contained confidential information, including staff salaries and shareholder data. The `staff` table contained **30 complete employee records**, including full names, job titles, departments, national identification information, and monthly salaries.
+
+Overall, the assessment identified **two Critical, four High/Medium information-security weaknesses, and one additional sensitive-data exposure finding**, with the combined security posture assessed as **Critical**.
+
+The highest-priority remediation actions are:
+
+1. Eliminate SQL injection by implementing parameterized queries.
+2. Remove database backups from publicly accessible directories.
+3. Disable directory listing.
+4. Enforce strong, unique passwords for encrypted patient documents.
+5. Place patient PDFs outside the public web root or enforce strict access controls.
+6. Prevent username enumeration through consistent authentication error messages.
+7. Strip unnecessary metadata from patient documents.
+8. Establish secure backup-storage and retention procedures.
+
+---
+
+# 2. Project Overview
+
+## Mediroza-General-Hospital-Penetration-Test
+
+The **Mediroza-General-Hospital-Penetration-Test** project documents a black-box penetration test performed against a simulated hospital environment provided by NetworkWalks.
+
+The assessment focused on the following attack surface:
+
+- Patient login functionality
+- Authentication controls
+- Patient report access
+- Encrypted PDF documents
+- PDF password strength
+- PDF metadata
+- Forgotten directories
+- Directory listing
+- Database backup exposure
+- Confidential staff information
+- Shareholder information
+
+The testing demonstrated how multiple weaknesses can be chained together to increase the overall impact of a compromise.
+
+---
+
+# 3. Assessment Scope
+
+The assessment was limited to the authorized Mediroza General Hospital environment provided as part of the NetworkWalks cybersecurity internship.
+
+## In-Scope Components
+
+| Component | Purpose |
+|---|---|
+| `patient/login.php` | Patient authentication |
+| `patient/reports/` | Patient report storage/access |
+| `patient_report_*.pdf` | Encrypted patient reports |
+| `patient_report_3.pdf` | PDF metadata analysis |
+| `old/` | Forgotten/legacy web directory |
+| `old/mediroza_db_backup_2019.sql` | Exposed database backup |
+
+Testing was performed within the agreed assessment scope.
+
+---
+
+# 4. Methodology
+
+The assessment followed a progressive black-box penetration-testing methodology.
+
+## Phase 1 — Reconnaissance
+
+The publicly accessible application structure was reviewed to identify login functionality, patient-report functionality, and potentially exposed directories.
+
+## Phase 2 — Authentication Testing
+
+The login mechanism was tested for:
+
+- Username enumeration
+- Authentication weaknesses
+- SQL injection
+- Authentication bypass
+
+## Phase 3 — Patient Report Access
+
+Following authentication-bypass validation, the patient-report functionality was assessed to determine whether protected PDF documents could be accessed.
+
+## Phase 4 — PDF Security Testing
+
+Encrypted PDF files were analyzed through:
+
+- Hash extraction
+- Hash validation
+- Wordlist-based password cracking
+- PDF decryption
+- Metadata inspection
+
+## Phase 5 — Web Directory and Backup Assessment
+
+The web application was examined for forgotten directories, directory listing, and accidentally exposed backup files.
+
+## Phase 6 — Database Exposure Analysis
+
+The exposed SQL backup was retrieved and restored into an isolated local MySQL/MariaDB environment.
+
+The restored database was analyzed to determine the scope and sensitivity of the exposed information.
+
+---
+
+# 5. Findings Summary
+
+| # | Vulnerability | Location | Risk |
+|---|---|---|---|
+| 1 | Username enumeration on login page | `patient/login.php` | **Medium** |
+| 2 | SQL injection login bypass | `patient/login.php` | **Critical** |
+| 3 | Encrypted PDFs accessible after login bypass | `patient/reports/` | **High** |
+| 4 | Weak PDF passwords crackable with a wordlist | `patient_report_*.pdf` | **High** |
+| 5 | Sensitive metadata left in patient PDF files | `patient_report_3.pdf` | **Medium** |
+| 6 | Forgotten backup folder with directory listing enabled | `old/` | **Critical** |
+| 7 | Confidential staff salaries and shareholder data in plain text | `old/mediroza_db_backup_2019.sql` | **Critical** |
+
+## Risk Distribution
+
+| Risk Level | Number of Findings |
+|---|---:|
+| 🔴 Critical | 3 |
+| 🟠 High | 2 |
+| 🟡 Medium | 2 |
+| 🟢 Low | 0 |
+
+> **Overall Risk Rating: 🔴 CRITICAL**
+
+---
+
+# 6. Detailed Findings
+
+## 6.1 Username Enumeration on Login Page
+
+| Attribute | Details |
+|---|---|
+| **Finding ID** | F-01 |
+| **Severity** | 🟡 Medium |
+| **Location** | `patient/login.php` |
+| **Category** | Authentication / Information Disclosure |
+| **Status** | Confirmed |
+
+## Description
+
+The patient login page was found to provide information that could allow an attacker to determine whether a supplied username exists.
+
+Username enumeration occurs when an application responds differently depending on whether the supplied username is valid.
+
+This can help an attacker build a list of valid accounts before attempting password attacks or exploiting other authentication weaknesses.
+
+## Security Impact
+
+Username enumeration reduces the uncertainty an attacker faces when targeting the authentication system.
+
+When combined with the SQL injection vulnerability identified in the same login functionality, the issue contributes to the overall weakness of the authentication mechanism.
+
+## Risk
+
+**Medium**
+
+The vulnerability does not independently provide complete authentication bypass, but it exposes useful information about valid accounts and can support further attacks.
+
+## Remediation
+
+The application should return the same generic error message for both invalid usernames and invalid passwords.
+
+For example:
+
+```text
+Invalid username or password.
+```
+
+# 👤 Author
+
+Name: Vraj Patel
+
+LinkedIn : https://www.linkedin.com/in/vraj-patel-vp8816/
